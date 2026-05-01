@@ -86,7 +86,7 @@ jobs:
       - name: Prepare backport workspace
         if: ${{ inputs.backport_target_branch != '' }}
         working-directory: ${{ github.workspace }}
-        run: ./.github/scripts/prepare-backport-checkout.sh "${{ inputs.backport_target_branch }}" "${{ inputs.backport_commit_range }}"
+        run: bash ./.github/scripts/prepare-backport-checkout.sh "${{ inputs.backport_target_branch }}" "${{ inputs.backport_commit_range }}"
       - name: Setup node
         uses: actions/setup-node@v5
         with:
@@ -146,7 +146,7 @@ jobs:
       - name: Prepare backport workspace
         if: ${{ inputs.backport_target_branch != '' }}
         working-directory: ${{ github.workspace }}
-        run: ./.github/scripts/prepare-backport-checkout.sh "${{ inputs.backport_target_branch }}" "${{ inputs.backport_commit_range }}"
+        run: bash ./.github/scripts/prepare-backport-checkout.sh "${{ inputs.backport_target_branch }}" "${{ inputs.backport_commit_range }}"
       - name: Setup JDK
         uses: actions/setup-java@v5
         with:
@@ -208,7 +208,7 @@ jobs:
           fetch-depth: 0
       - name: Prepare backport workspace
         if: ${{ inputs.backport_target_branch != '' }}
-        run: ./.github/scripts/prepare-backport-checkout.sh "${{ inputs.backport_target_branch }}" "${{ inputs.backport_commit_range }}"
+        run: bash ./.github/scripts/prepare-backport-checkout.sh "${{ inputs.backport_target_branch }}" "${{ inputs.backport_commit_range }}"
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
@@ -253,7 +253,7 @@ jobs:
       - name: Prepare backport workspace
         if: ${{ inputs.backport_target_branch != '' }}
         working-directory: ${{ github.workspace }}
-        run: ./.github/scripts/prepare-backport-checkout.sh "${{ inputs.backport_target_branch }}" "${{ inputs.backport_commit_range }}"
+        run: bash ./.github/scripts/prepare-backport-checkout.sh "${{ inputs.backport_target_branch }}" "${{ inputs.backport_commit_range }}"
       - name: Setup Bun
         run: |
           curl -fsSL https://bun.sh/install | bash -s -- bun-v${{ matrix.bun-version }}
