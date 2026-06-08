@@ -583,3 +583,4 @@ object ArrowFlightActorBench {
   }
 }
 // trigger engine label for pr-comment-loop test
+// rev2: validate table renderer + upsert
