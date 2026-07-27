@@ -1,3 +1,3 @@
 line1
-SHARED
+FIXED-BY-S1
 line3
