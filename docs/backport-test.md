@@ -1,0 +1,3 @@
+line1
+CONFLICT-DIVERGED
+line3
