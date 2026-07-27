@@ -14,25 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Active release branches and their release managers. This file is the single
-# source of truth for the backport automation. Listing a branch here:
-#   - auto-labels new `fix:` PRs with the branch's `release/*` label
-#     (.github/workflows/backport-auto-label.yml), so backports are opt-out
-#     rather than easy-to-forget opt-in;
-#   - requests review from the branch's release manager on those PRs;
-#   - drives the post-merge backport (.github/workflows/direct-backport-push.yml):
-#     a green pre-merge backport check cherry-picks straight to the branch, a
-#     red one opens a draft backport PR assigned to the author with the manager
-#     as reviewer.
-#
-# When a release branch is frozen / end-of-life, remove its entry here to stop
-# auto-labeling and auto-backporting to it. The label name equals the branch
-# name (e.g. branch `release/v1.2` <-> label `release/v1.2`).
-#
-# `manager` is a GitHub username. It may be omitted (leave the branch as a
-# backport target without an auto-requested reviewer), but is recommended.
+# FORK TEST CONFIG — points at throwaway release branches for backport testing.
 targets:
-  - branch: release/v1.2
-    manager: xuang7
-  - branch: release/v1.1
-    manager: bobbai00
+  - branch: release/test-clean
+    manager: Yicong-Huang
+  - branch: release/test-conflict
+    manager: Yicong-Huang
