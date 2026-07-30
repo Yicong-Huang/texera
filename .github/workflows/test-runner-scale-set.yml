@@ -11,9 +11,8 @@ jobs:
     steps:
       - name: Runner info
         run: |
-          echo "hostname: $(hostname)"
-          uname -a
-          echo "runner name: $RUNNER_NAME"
-          nproc
-          free -h || true
-          df -h / || true
+          echo "PATH=$PATH"
+          which go || echo "no go"
+          ls /home/runner/go/bin 2>/dev/null || echo "no ~/go/bin"
+          which license-eye || echo "no license-eye"
+          which make psql google-chrome sudo || true
