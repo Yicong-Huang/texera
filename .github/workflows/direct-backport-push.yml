@@ -32,7 +32,7 @@ permissions:
 jobs:
   discover:
     name: Discover direct backport targets
-    runs-on: ubuntu-latest
+    runs-on: arc-linux
     outputs:
       push_entries: ${{ steps.discover.outputs.push_entries }}
       pr_entries: ${{ steps.discover.outputs.pr_entries }}
@@ -341,7 +341,7 @@ jobs:
   push-backports:
     needs: discover
     if: ${{ needs.discover.outputs.has_push == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: arc-linux
     name: "backport #${{ matrix.pr_number }} to ${{ matrix.target }}"
     strategy:
       fail-fast: false
@@ -795,7 +795,7 @@ jobs:
   open-backport-pr:
     needs: discover
     if: ${{ needs.discover.outputs.has_pr == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: arc-linux
     name: "open backport PR #${{ matrix.pr_number }} to ${{ matrix.target }}"
     strategy:
       fail-fast: false

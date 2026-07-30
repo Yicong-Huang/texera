@@ -33,7 +33,7 @@ permissions:
 
 jobs:
   suggest-reviewers:
-    runs-on: ubuntu-latest
+    runs-on: arc-linux
     steps:
       - uses: actions/checkout@v7
         with:

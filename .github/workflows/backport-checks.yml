@@ -62,7 +62,7 @@ jobs:
   apply-check:
     needs: precheck
     if: ${{ needs.precheck.outputs.backport_targets != '[]' }}
-    runs-on: ubuntu-latest
+    runs-on: arc-linux
     outputs:
       buildable: ${{ steps.check.outputs.buildable }}
     steps:

@@ -40,7 +40,7 @@ jobs:
   sync:
     # Skip on forks.
     if: github.repository == 'apache/texera'
-    runs-on: ubuntu-latest
+    runs-on: arc-linux
     steps:
       - name: Checkout texera
         uses: actions/checkout@v7

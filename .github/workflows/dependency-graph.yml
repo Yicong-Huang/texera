@@ -30,7 +30,7 @@ permissions: {}
 jobs:
   dependency-graph:
     name: Update Dependency Graph
-    runs-on: ubuntu-latest
+    runs-on: arc-linux
     if: github.repository == 'apache/texera'
     permissions:
       # The Dependency Submission API requires write permission

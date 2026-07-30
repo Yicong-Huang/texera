@@ -59,7 +59,7 @@ jobs:
     # Only PRs into main get backport labels. A PR already targeting a
     # release/* branch is itself a backport and must not be re-labeled.
     if: ${{ github.event.pull_request.base.ref == 'main' }}
-    runs-on: ubuntu-latest
+    runs-on: arc-linux
     steps:
       # Check out the base commit (a trusted commit already on main) so the
       # release-branches config and its parser come from the base repo, never

@@ -45,7 +45,7 @@ jobs:
   report:
     if: always()
     needs: [build]
-    runs-on: ubuntu-latest
+    runs-on: arc-linux
     steps:
       - name: File or update tracking issue
         uses: actions/github-script@v9
