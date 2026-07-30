@@ -177,10 +177,10 @@ jobs:
             );
             core.setOutput("run_bench", shouldRun ? "true" : "false");
             // ci:self-hosted routes the bench onto the dedicated
-            // arc-bench-linux runner. Fallback to GitHub-hosted when the
-            // set has no online runner (Level 1) or when every runner is
-            // busy with a backlog already queued (Level 2) — same probes
-            // as precheck.yml.
+            // arc-bench-linux runner. Availability-only fallback: benchmark
+            // numbers must come from consistent hardware, so a busy bench
+            // runner means WAIT (queue), never drift to GitHub-hosted —
+            // only a set with no online runner at all falls back.
             let linuxRunner = labels.includes("ci:self-hosted") ? "arc-bench-linux" : "ubuntu-latest";
             if (linuxRunner === "arc-bench-linux" && process.env.ARC_STATUS_TOKEN) {
               try {
@@ -194,44 +194,12 @@ jobs:
                   }
                 );
                 if (!res.ok) throw new Error(`runner list HTTP ${res.status}`);
-                let nOnline = 0;
-                let nIdle = 0;
-                for (const r of (await res.json()).runners ?? []) {
-                  if (r.status !== "online") continue;
-                  if (!r.labels.some((l) => l.name === "arc-bench-linux")) continue;
-                  nOnline += 1;
-                  if (!r.busy) nIdle += 1;
-                }
-                let nBacklog = 0;
-                try {
-                  const { data: queued } = await github.rest.actions.listWorkflowRunsForRepo({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    status: "queued",
-                    per_page: 10,
-                  });
-                  for (const run of queued.workflow_runs ?? []) {
-                    const { data: jobsData } = await github.rest.actions.listJobsForWorkflowRun({
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      run_id: run.id,
-                      per_page: 100,
-                    });
-                    for (const job of jobsData.jobs ?? []) {
-                      if (job.status === "queued" && job.labels.includes("arc-bench-linux")) nBacklog += 1;
-                    }
-                  }
-                } catch (e) {
-                  core.warning(`Backlog probe failed (${e.message}); assuming no backlog.`);
-                }
-                if (nOnline === 0) {
+                const online = (await res.json()).runners?.some(
+                  (r) => r.status === "online" && r.labels.some((l) => l.name === "arc-bench-linux")
+                );
+                if (!online) {
                   linuxRunner = "ubuntu-latest";
                   core.warning("arc-bench-linux has no online runner; falling back to ubuntu-latest.");
-                } else if (nIdle === 0 && nBacklog >= 1) {
-                  linuxRunner = "ubuntu-latest";
-                  core.warning(`arc-bench-linux busy with ${nBacklog} queued; falling back to ubuntu-latest.`);
-                } else {
-                  core.info(`arc-bench-linux: online=${nOnline} idle=${nIdle} backlog=${nBacklog} — ok`);
                 }
               } catch (e) {
                 core.warning(`Runner availability probe failed (${e.message}); trusting the label.`);
