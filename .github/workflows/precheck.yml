@@ -50,10 +50,13 @@ on:
         value: ${{ jobs.decide.outputs.run_pyright_language_service }}
       backport_targets:
         value: ${{ jobs.decide.outputs.backport_targets }}
-      # Runner label for Linux build jobs: arc-linux when the PR carries
-      # the ci:self-hosted label, GitHub-hosted ubuntu-latest otherwise.
-      linux_runner:
-        value: ${{ jobs.decide.outputs.linux_runner }}
+      # Runner labels for Linux build jobs, two tiers: the self-hosted
+      # scale sets when the PR carries the ci:self-hosted label,
+      # GitHub-hosted ubuntu-latest otherwise.
+      heavy_runner:
+        value: ${{ jobs.decide.outputs.heavy_runner }}
+      cheap_runner:
+        value: ${{ jobs.decide.outputs.cheap_runner }}
 
 permissions:
   checks: read
@@ -77,7 +80,8 @@ jobs:
       run_infra: ${{ steps.decide.outputs.run_infra }}
       run_pyright_language_service: ${{ steps.decide.outputs.run_pyright_language_service }}
       backport_targets: ${{ steps.decide.outputs.backport_targets }}
-      linux_runner: ${{ steps.decide.outputs.linux_runner }}
+      heavy_runner: ${{ steps.decide.outputs.heavy_runner }}
+      cheap_runner: ${{ steps.decide.outputs.cheap_runner }}
     steps:
       - name: Wait for Pull Request Labeler
         if: github.event_name == 'pull_request'
@@ -319,12 +323,16 @@ jobs:
               runPyrightLanguageService = false;
             }
 
-            // Runner tier: the ci:self-hosted PR label forces every Linux
-            // build job onto the self-hosted arc-linux scale set; the
-            // default (including push / dispatch events) is GitHub-hosted.
-            const linuxRunner = labels.includes("ci:self-hosted") ? "arc-linux" : "ubuntu-latest";
-            core.setOutput("linux_runner", linuxRunner);
-            core.info(`Linux runner: ${linuxRunner}`);
+            // Runner tiers: the ci:self-hosted PR label forces Linux build
+            // jobs onto the self-hosted scale sets (arc-heavy for the sbt/JVM
+            // stacks, arc-cheap for the rest); the default (including push /
+            // dispatch events) is GitHub-hosted.
+            const selfHosted = labels.includes("ci:self-hosted");
+            const heavyRunner = selfHosted ? "arc-heavy" : "ubuntu-latest";
+            const cheapRunner = selfHosted ? "arc-cheap" : "ubuntu-latest";
+            core.setOutput("heavy_runner", heavyRunner);
+            core.setOutput("cheap_runner", cheapRunner);
+            core.info(`Linux runners: heavy=${heavyRunner} cheap=${cheapRunner}`);
 
             core.setOutput("run_frontend", runFrontend ? "true" : "false");
             core.setOutput("run_amber", runAmber ? "true" : "false");

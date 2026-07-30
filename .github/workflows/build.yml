@@ -36,10 +36,15 @@ on:
         required: false
         type: string
         default: ""
-      # Runner label for every Linux job. Callers pass arc-linux to route
-      # the build onto the self-hosted scale set (precheck decides via the
-      # ci:self-hosted PR label); GitHub-hosted ubuntu-latest otherwise.
-      linux_runner:
+      # Runner labels for Linux jobs, two tiers (precheck decides via the
+      # ci:self-hosted PR label; GitHub-hosted ubuntu-latest otherwise).
+      # heavy: amber / amber-integration / frontend (sbt + JVM tests).
+      heavy_runner:
+        required: false
+        type: string
+        default: "ubuntu-latest"
+      # cheap: platform / pyamber / infra / agent-service / pyright.
+      cheap_runner:
         required: false
         type: string
         default: "ubuntu-latest"
@@ -95,11 +100,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["${{ inputs.linux_runner }}", windows-latest, macos-latest]
+        os: ["${{ inputs.heavy_runner }}", windows-latest, macos-latest]
         include:
           - os: macos-latest
             arch: arm64
-          - os: "${{ inputs.linux_runner }}"
+          - os: "${{ inputs.heavy_runner }}"
             arch: x64
           - os: windows-latest
             arch: x64
@@ -192,7 +197,7 @@ jobs:
     if: ${{ inputs.run_amber }}
     strategy:
       matrix:
-        os: ["${{ inputs.linux_runner }}"]
+        os: ["${{ inputs.heavy_runner }}"]
         java-version: [17]
     runs-on: ${{ matrix.os }}
     env:
@@ -365,7 +370,7 @@ jobs:
       # the docker image, macOS uses brew + the upstream
       # aarch64-apple-darwin lakekeeper tarball.
       matrix:
-        os: ["${{ inputs.linux_runner }}", macos-latest]
+        os: ["${{ inputs.heavy_runner }}", macos-latest]
         java-version: [17]
     runs-on: ${{ matrix.os }}
     env:
@@ -730,7 +735,7 @@ jobs:
     # cover every module in the amber job above, so this matrix skips them.
     if: ${{ inputs.run_platform }}
     name: ${{ format('platform{0} ({1})', inputs.job_name_suffix, matrix.service) }}
-    runs-on: ${{ inputs.linux_runner }}
+    runs-on: ${{ inputs.cheap_runner }}
     strategy:
       fail-fast: false
       matrix:
@@ -862,7 +867,7 @@ jobs:
     # alone. Unit tests + coverage stay in `platform`. See #6273.
     if: ${{ inputs.run_platform_integration }}
     name: ${{ format('platform-integration{0} ({1})', inputs.job_name_suffix, matrix.service) }}
-    runs-on: ${{ inputs.linux_runner }}
+    runs-on: ${{ inputs.cheap_runner }}
     strategy:
       fail-fast: false
       matrix:
@@ -994,7 +999,7 @@ jobs:
     if: ${{ inputs.run_pyamber }}
     strategy:
       matrix:
-        os: ["${{ inputs.linux_runner }}"]
+        os: ["${{ inputs.cheap_runner }}"]
         python-version: ["3.11", "3.12", "3.13"]
     runs-on: ${{ matrix.os }}
     services:
@@ -1114,7 +1119,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["${{ inputs.linux_runner }}", macos-latest]
+        os: ["${{ inputs.cheap_runner }}", macos-latest]
         bun-version: ["1.3.3"]
     defaults:
       run:
@@ -1196,7 +1201,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["${{ inputs.linux_runner }}", macos-latest]
+        os: ["${{ inputs.cheap_runner }}", macos-latest]
         python-version: ["3.12"]
     steps:
       - name: Checkout Texera
@@ -1255,7 +1260,7 @@ jobs:
     # stays a fast, docker-free job.
     if: ${{ inputs.run_pyright_language_service }}
     name: ${{ format('pyright-language-service{0}', inputs.job_name_suffix) }}
-    runs-on: ${{ inputs.linux_runner }}
+    runs-on: ${{ inputs.cheap_runner }}
     defaults:
       run:
         working-directory: pyright-language-service
