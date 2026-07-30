@@ -6,7 +6,7 @@ on:
 
 jobs:
   smoke:
-    runs-on: github-main-runner
+    runs-on: arc-linux
     timeout-minutes: 10
     steps:
       - name: Runner info
