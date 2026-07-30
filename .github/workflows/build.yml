@@ -357,9 +357,9 @@ jobs:
       # the docker image, macOS uses brew + the upstream
       # aarch64-apple-darwin lakekeeper tarball.
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]  # self-hosted test: macOS dropped (Linux runner)
         java-version: [17]
-    runs-on: ${{ matrix.os }}
+    runs-on: [self-hosted, Linux, X64]  # self-hosted runner smoke test
     env:
       JAVA_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
       JVM_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
@@ -988,7 +988,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.11", "3.12", "3.13"]
-    runs-on: ${{ matrix.os }}
+    runs-on: [self-hosted, Linux, X64]  # self-hosted runner smoke test
     services:
       postgres:
         image: postgres
