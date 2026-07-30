@@ -50,6 +50,10 @@ on:
         value: ${{ jobs.decide.outputs.run_pyright_language_service }}
       backport_targets:
         value: ${{ jobs.decide.outputs.backport_targets }}
+      # Runner label for Linux build jobs: arc-linux when the PR carries
+      # the ci:self-hosted label, GitHub-hosted ubuntu-latest otherwise.
+      linux_runner:
+        value: ${{ jobs.decide.outputs.linux_runner }}
 
 permissions:
   checks: read
@@ -73,6 +77,7 @@ jobs:
       run_infra: ${{ steps.decide.outputs.run_infra }}
       run_pyright_language_service: ${{ steps.decide.outputs.run_pyright_language_service }}
       backport_targets: ${{ steps.decide.outputs.backport_targets }}
+      linux_runner: ${{ steps.decide.outputs.linux_runner }}
     steps:
       - name: Wait for Pull Request Labeler
         if: github.event_name == 'pull_request'
@@ -313,6 +318,13 @@ jobs:
               runInfra = false;
               runPyrightLanguageService = false;
             }
+
+            // Runner tier: the ci:self-hosted PR label forces every Linux
+            // build job onto the self-hosted arc-linux scale set; the
+            // default (including push / dispatch events) is GitHub-hosted.
+            const linuxRunner = labels.includes("ci:self-hosted") ? "arc-linux" : "ubuntu-latest";
+            core.setOutput("linux_runner", linuxRunner);
+            core.info(`Linux runner: ${linuxRunner}`);
 
             core.setOutput("run_frontend", runFrontend ? "true" : "false");
             core.setOutput("run_amber", runAmber ? "true" : "false");

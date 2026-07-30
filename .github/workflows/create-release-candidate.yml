@@ -52,7 +52,7 @@ jobs:
 
   create-rc:
     needs: build
-    runs-on: arc-linux
+    runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.vars.outputs.version }}
       rc_num: ${{ steps.vars.outputs.rc_num }}
@@ -296,7 +296,7 @@ jobs:
           retention-days: 7
 
   upload-rc:
-    runs-on: arc-linux
+    runs-on: ubuntu-latest
     needs: create-rc
 
     steps:

@@ -64,7 +64,7 @@ concurrency:
 jobs:
   # Step 0: Set runtime parameters (handles both manual and scheduled runs)
   set-parameters:
-    runs-on: arc-linux
+    runs-on: ubuntu-latest
     if: github.event_name != 'schedule' || github.repository == 'apache/texera'
     outputs:
       branch: ${{ steps.set-params.outputs.branch }}
@@ -108,7 +108,7 @@ jobs:
   # Step 1: Generate JOOQ code once and share it
   generate-jooq:
     needs: [set-parameters]
-    runs-on: arc-linux
+    runs-on: ubuntu-latest
     env:
       JAVA_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
       JVM_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
@@ -166,7 +166,7 @@ jobs:
   # Step 2: Parse services and prepare build matrix
   prepare-matrix:
     needs: [set-parameters]
-    runs-on: arc-linux
+    runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       build_amd64: ${{ steps.set-platforms.outputs.build_amd64 }}
@@ -303,7 +303,7 @@ jobs:
 
   # Step 3a: Build AMD64 images (runs in parallel with ARM64)
   build-amd64:
-    runs-on: arc-linux
+    runs-on: ubuntu-latest
     needs: [set-parameters, generate-jooq, prepare-matrix]
     if: needs.prepare-matrix.outputs.build_amd64 == 'true'
     strategy:
@@ -383,7 +383,7 @@ jobs:
 
   # Step 3b: Build ARM64 images (runs in parallel with AMD64)
   build-arm64:
-    runs-on: arc-linux
+    runs-on: ubuntu-latest
     needs: [set-parameters, generate-jooq, prepare-matrix]
     if: needs.prepare-matrix.outputs.build_arm64 == 'true'
     strategy:
@@ -469,7 +469,7 @@ jobs:
 
   # Step 4: Create multi-arch manifests (only if building both platforms)
   create-manifests:
-    runs-on: arc-linux
+    runs-on: ubuntu-latest
     needs: [set-parameters, prepare-matrix, build-amd64, build-arm64]
     if: always() && needs.prepare-matrix.outputs.need_manifest == 'true'
     strategy:
@@ -508,7 +508,7 @@ jobs:
 
   # Step 5: Summary report
   build-summary:
-    runs-on: arc-linux
+    runs-on: ubuntu-latest
     needs: [set-parameters, prepare-matrix, build-amd64, build-arm64, create-manifests]
     if: always()
     steps:
@@ -526,8 +526,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Build Method" >> $GITHUB_STEP_SUMMARY
           echo "**Parallel platform builds** (faster)" >> $GITHUB_STEP_SUMMARY
-          echo "- AMD64: Native build on \`arc-linux\`" >> $GITHUB_STEP_SUMMARY
-          echo "- ARM64: QEMU emulation on \`arc-linux\` (runs in parallel)" >> $GITHUB_STEP_SUMMARY
+          echo "- AMD64: Native build on \`ubuntu-latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- ARM64: QEMU emulation on \`ubuntu-latest\` (runs in parallel)" >> $GITHUB_STEP_SUMMARY
           echo "- Manifests: Combined into multi-arch images" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> **Performance:** AMD64 and ARM64 now build simultaneously instead of sequentially!" >> $GITHUB_STEP_SUMMARY
