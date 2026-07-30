@@ -723,7 +723,7 @@ jobs:
     # cover every module in the amber job above, so this matrix skips them.
     if: ${{ inputs.run_platform }}
     name: ${{ format('platform{0} ({1})', inputs.job_name_suffix, matrix.service) }}
-    runs-on: arc-linux
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -855,7 +855,7 @@ jobs:
     # alone. Unit tests + coverage stay in `platform`. See #6273.
     if: ${{ inputs.run_platform_integration }}
     name: ${{ format('platform-integration{0} ({1})', inputs.job_name_suffix, matrix.service) }}
-    runs-on: arc-linux
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -987,7 +987,7 @@ jobs:
     if: ${{ inputs.run_pyamber }}
     strategy:
       matrix:
-        os: [arc-linux]
+        os: [ubuntu-latest]
         python-version: ["3.11", "3.12", "3.13"]
     runs-on: ${{ matrix.os }}
     services:

@@ -38,7 +38,7 @@ permissions:
 
 jobs:
   publish:
-    runs-on: arc-linux
+    runs-on: ubuntu-slim
     steps:
       - name: Download preflight artifact
         id: download
