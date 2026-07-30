@@ -44,6 +44,16 @@ ARG GO_VERSION=1.24.5
 RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xz
 ENV PATH="/usr/local/go/bin:/home/runner/go/bin:/home/runner/.local/bin:${PATH}"
 
+# Temurin JDK 17 — preinstalled on GitHub-hosted images; bin/local-dev.sh
+# (infra job) probes for a JDK 17 install without running setup-java.
+RUN curl -fsSL https://packages.adoptium.net/artifactory/api/gpg/key/public \
+      | gpg --dearmor -o /usr/share/keyrings/adoptium.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb $(. /etc/os-release && echo $VERSION_CODENAME) main" \
+      > /etc/apt/sources.list.d/adoptium.list \
+    && apt-get update && apt-get install -y --no-install-recommends temurin-17-jdk \
+    && rm -rf /var/lib/apt/lists/*
+ENV JAVA_HOME_17_X64=/usr/lib/jvm/temurin-17-jdk-amd64
+
 # Google Chrome — frontend karma ChromeHeadless tests.
 RUN curl -fsSL https://dl.google.com/linux/linux_signing_key.pub \
       | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
