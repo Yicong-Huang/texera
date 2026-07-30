@@ -42,6 +42,6 @@ template:
             memory: "12Gi"
             ephemeral-storage: "15Gi"
           limits:
-            cpu: "16"
+            cpu: "12"
             memory: "16Gi"
             ephemeral-storage: "25Gi"
