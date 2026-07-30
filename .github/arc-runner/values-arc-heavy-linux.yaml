@@ -18,7 +18,7 @@
 # Heavy tier: amber / amber-integration / frontend (sbt + JVM tests).
 githubConfigUrl: "https://github.com/Yicong-Huang/Texera"
 githubConfigSecret: github-arc-secret
-runnerScaleSetName: "arc-heavy"
+runnerScaleSetName: "arc-heavy-linux"
 minRunners: 0
 maxRunners: 4
 

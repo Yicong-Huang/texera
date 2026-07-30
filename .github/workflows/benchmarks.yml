@@ -170,8 +170,8 @@ jobs:
                 : "No trigger label present; skipping bench."
             );
             core.setOutput("run_bench", shouldRun ? "true" : "false");
-            // ci:self-hosted routes the bench onto the dedicated arc-bench runner.
-            const linuxRunner = labels.includes("ci:self-hosted") ? "arc-bench" : "ubuntu-latest";
+            // ci:self-hosted routes the bench onto the dedicated arc-bench-linux runner.
+            const linuxRunner = labels.includes("ci:self-hosted") ? "arc-bench-linux" : "ubuntu-latest";
             core.setOutput("linux_runner", linuxRunner);
             core.info(`Linux runner: ${linuxRunner}`);
 

@@ -324,12 +324,12 @@ jobs:
             }
 
             // Runner tiers: the ci:self-hosted PR label forces Linux build
-            // jobs onto the self-hosted scale sets (arc-heavy for the sbt/JVM
-            // stacks, arc-cheap for the rest); the default (including push /
+            // jobs onto the self-hosted scale sets (arc-heavy-linux for the sbt/JVM
+            // stacks, arc-light-linux for the rest); the default (including push /
             // dispatch events) is GitHub-hosted.
             const selfHosted = labels.includes("ci:self-hosted");
-            const heavyRunner = selfHosted ? "arc-heavy" : "ubuntu-latest";
-            const cheapRunner = selfHosted ? "arc-cheap" : "ubuntu-latest";
+            const heavyRunner = selfHosted ? "arc-heavy-linux" : "ubuntu-latest";
+            const cheapRunner = selfHosted ? "arc-light-linux" : "ubuntu-latest";
             core.setOutput("heavy_runner", heavyRunner);
             core.setOutput("cheap_runner", cheapRunner);
             core.info(`Linux runners: heavy=${heavyRunner} cheap=${cheapRunner}`);

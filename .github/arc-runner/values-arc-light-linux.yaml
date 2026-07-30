@@ -18,7 +18,7 @@
 # Cheap tier: platform / pyamber / infra / agent-service / pyright.
 githubConfigUrl: "https://github.com/Yicong-Huang/Texera"
 githubConfigSecret: github-arc-secret
-runnerScaleSetName: "arc-cheap"
+runnerScaleSetName: "arc-light-linux"
 minRunners: 0
 maxRunners: 10
 
