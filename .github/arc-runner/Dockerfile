@@ -49,6 +49,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
+# UTC timezone in the canonical form, like GitHub-hosted images.
+# tzlocal (pyamber tests) chokes on a bare zoneinfo-root localtime
+# symlink with UnknownTimeZoneError: '/UTC'.
+RUN apt-get update && apt-get install -y --no-install-recommends tzdata \
+    && ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime \
+    && echo "Etc/UTC" > /etc/timezone \
+    && rm -rf /var/lib/apt/lists/*
+ENV TZ=Etc/UTC
+
 # Passwordless sudo, same as GitHub-hosted runners (protoc install,
 # playwright install --with-deps, apt steps in workflows).
 RUN echo "runner ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/runner \
