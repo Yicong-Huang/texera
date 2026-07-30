@@ -1,0 +1,19 @@
+name: Test runner scale set
+on:
+  push:
+    branches: [test-runner-scale-set]
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: github-main-runner
+    timeout-minutes: 10
+    steps:
+      - name: Runner info
+        run: |
+          echo "hostname: $(hostname)"
+          uname -a
+          echo "runner name: $RUNNER_NAME"
+          nproc
+          free -h || true
+          df -h / || true
