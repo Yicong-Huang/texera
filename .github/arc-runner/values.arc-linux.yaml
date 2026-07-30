@@ -1,0 +1,25 @@
+# Helm values for the arc-linux runner scale set
+# (gha-runner-scale-set chart). Apply with:
+#
+#   helm upgrade arc-linux \
+#     oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set \
+#     -n <runners-namespace> --reuse-values -f values.arc-linux.yaml
+#
+# If the ghcr package stays private, add an imagePullSecret to the
+# pod template (or make the package public in GitHub package settings).
+
+# dind is required: build.yml jobs use `services:` (postgres) and the
+# benchmark/platform jobs talk to the docker daemon directly.
+containerMode:
+  type: dind
+
+template:
+  spec:
+    containers:
+      - name: runner
+        image: ghcr.io/yicong-huang/texera-arc-runner:latest
+        command: ["/home/runner/run.sh"]
+        resources:
+          requests:
+            cpu: "4"
+            memory: 8Gi
