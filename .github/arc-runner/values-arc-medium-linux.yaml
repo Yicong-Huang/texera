@@ -15,13 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Bench tier: dedicated runners so benchmark numbers stay comparable (16C/16G).
-# Target fleet: 1-2; single node runs 1.
+# Medium tier: platform / platform-integration / frontend (4C/8G class).
+# Target fleet: 10-20 runners once more nodes join; a single 72C/125G
+# node caps out around 7 alongside the other tiers.
 githubConfigUrl: "https://github.com/Yicong-Huang/Texera"
 githubConfigSecret: github-arc-secret
-runnerScaleSetName: "arc-bench-linux"
-minRunners: 1
-maxRunners: 1
+runnerScaleSetName: "arc-medium-linux"
+minRunners: 4
+maxRunners: 7
 
 # service containers (postgres) and docker builds need a Docker daemon
 containerMode:
@@ -39,10 +40,10 @@ template:
           - /home/runner/run.sh
         resources:
           requests:
-            cpu: "4"
-            memory: "12Gi"
-            ephemeral-storage: "15Gi"
+            cpu: "2"
+            memory: "6Gi"
+            ephemeral-storage: "10Gi"
           limits:
-            cpu: "16"
-            memory: "16Gi"
-            ephemeral-storage: "25Gi"
+            cpu: "4"
+            memory: "8Gi"
+            ephemeral-storage: "16Gi"

@@ -15,12 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Cheap tier: platform / pyamber / infra / agent-service / pyright.
+# Light tier: pyamber / infra / agent-service / pyright (2C/4G class).
+# Target fleet: 10-20 runners once more nodes join.
 githubConfigUrl: "https://github.com/Yicong-Huang/Texera"
 githubConfigSecret: github-arc-secret
 runnerScaleSetName: "arc-light-linux"
-minRunners: 9
-maxRunners: 18
+minRunners: 3
+maxRunners: 6
 
 # service containers (postgres) and docker builds need a Docker daemon
 containerMode:
@@ -39,9 +40,9 @@ template:
         resources:
           requests:
             cpu: "1"
-            memory: "3.5Gi"
+            memory: "3Gi"
             ephemeral-storage: "8Gi"
           limits:
             cpu: "2"
-            memory: "6Gi"
+            memory: "4Gi"
             ephemeral-storage: "15Gi"

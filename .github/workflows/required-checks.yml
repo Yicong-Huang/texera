@@ -57,7 +57,8 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       heavy_runner: ${{ needs.precheck.outputs.heavy_runner }}
-      cheap_runner: ${{ needs.precheck.outputs.cheap_runner }}
+      medium_runner: ${{ needs.precheck.outputs.medium_runner }}
+      light_runner: ${{ needs.precheck.outputs.light_runner }}
       run_frontend: ${{ needs.precheck.outputs.run_frontend == 'true' }}
       run_amber: ${{ needs.precheck.outputs.run_amber == 'true' }}
       run_amber_integration: ${{ needs.precheck.outputs.run_amber_integration == 'true' }}

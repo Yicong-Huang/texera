@@ -15,7 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Heavy tier: amber / amber-integration / frontend (sbt + JVM tests).
+# Heavy tier: amber / amber-integration (8C/16G class).
+# Target fleet: 10 runners once more nodes join; single node caps at 3.
 githubConfigUrl: "https://github.com/Yicong-Huang/Texera"
 githubConfigSecret: github-arc-secret
 runnerScaleSetName: "arc-heavy-linux"

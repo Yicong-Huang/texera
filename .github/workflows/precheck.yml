@@ -50,13 +50,15 @@ on:
         value: ${{ jobs.decide.outputs.run_pyright_language_service }}
       backport_targets:
         value: ${{ jobs.decide.outputs.backport_targets }}
-      # Runner labels for Linux build jobs, two tiers: the self-hosted
+      # Runner labels for Linux build jobs, three tiers: the self-hosted
       # scale sets when the PR carries the ci:self-hosted label,
       # GitHub-hosted ubuntu-latest otherwise.
       heavy_runner:
         value: ${{ jobs.decide.outputs.heavy_runner }}
-      cheap_runner:
-        value: ${{ jobs.decide.outputs.cheap_runner }}
+      medium_runner:
+        value: ${{ jobs.decide.outputs.medium_runner }}
+      light_runner:
+        value: ${{ jobs.decide.outputs.light_runner }}
 
 permissions:
   checks: read
@@ -81,7 +83,8 @@ jobs:
       run_pyright_language_service: ${{ steps.decide.outputs.run_pyright_language_service }}
       backport_targets: ${{ steps.decide.outputs.backport_targets }}
       heavy_runner: ${{ steps.decide.outputs.heavy_runner }}
-      cheap_runner: ${{ steps.decide.outputs.cheap_runner }}
+      medium_runner: ${{ steps.decide.outputs.medium_runner }}
+      light_runner: ${{ steps.decide.outputs.light_runner }}
     steps:
       - name: Wait for Pull Request Labeler
         if: github.event_name == 'pull_request'
@@ -329,9 +332,11 @@ jobs:
             }
 
             // Runner tiers: the ci:self-hosted PR label opts Linux build
-            // jobs into the self-hosted scale sets (arc-heavy-linux for the
-            // sbt/JVM stacks, arc-light-linux for the rest); the default
-            // (including push / dispatch events) is GitHub-hosted.
+            // jobs into the self-hosted scale sets — arc-heavy-linux for
+            // the amber/sbt stacks, arc-medium-linux for platform and
+            // frontend, arc-light-linux for the small python/service jobs.
+            // The default (including push / dispatch events) is
+            // GitHub-hosted.
             //
             // Availability fallback: before routing, probe the runner API
             // for an online runner of each set and fall back to
@@ -342,8 +347,11 @@ jobs:
             // and would look unavailable. Probing needs ARC_STATUS_TOKEN
             // (administration:read); without it the label is trusted as-is.
             const selfHosted = labels.includes("ci:self-hosted");
-            let heavyRunner = selfHosted ? "arc-heavy-linux" : "ubuntu-latest";
-            let cheapRunner = selfHosted ? "arc-light-linux" : "ubuntu-latest";
+            const tiers = {
+              heavy_runner: selfHosted ? "arc-heavy-linux" : "ubuntu-latest",
+              medium_runner: selfHosted ? "arc-medium-linux" : "ubuntu-latest",
+              light_runner: selfHosted ? "arc-light-linux" : "ubuntu-latest",
+            };
             if (selfHosted && process.env.ARC_STATUS_TOKEN) {
               try {
                 const res = await fetch(
@@ -360,13 +368,11 @@ jobs:
                 for (const r of (await res.json()).runners ?? []) {
                   if (r.status === "online") for (const l of r.labels) online.add(l.name);
                 }
-                if (!online.has("arc-heavy-linux")) {
-                  heavyRunner = "ubuntu-latest";
-                  core.warning("arc-heavy-linux has no online runner; falling back to ubuntu-latest.");
-                }
-                if (!online.has("arc-light-linux")) {
-                  cheapRunner = "ubuntu-latest";
-                  core.warning("arc-light-linux has no online runner; falling back to ubuntu-latest.");
+                for (const [output, scaleSet] of Object.entries({ ...tiers })) {
+                  if (scaleSet !== "ubuntu-latest" && !online.has(scaleSet)) {
+                    tiers[output] = "ubuntu-latest";
+                    core.warning(`${scaleSet} has no online runner; falling back to ubuntu-latest.`);
+                  }
                 }
               } catch (e) {
                 core.warning(`Runner availability probe failed (${e.message}); trusting the label.`);
@@ -374,9 +380,8 @@ jobs:
             } else if (selfHosted) {
               core.info("ARC_STATUS_TOKEN not set; trusting the ci:self-hosted label without probing.");
             }
-            core.setOutput("heavy_runner", heavyRunner);
-            core.setOutput("cheap_runner", cheapRunner);
-            core.info(`Linux runners: heavy=${heavyRunner} cheap=${cheapRunner}`);
+            for (const [output, runner] of Object.entries(tiers)) core.setOutput(output, runner);
+            core.info(`Linux runners: heavy=${tiers.heavy_runner} medium=${tiers.medium_runner} light=${tiers.light_runner}`);
 
             core.setOutput("run_frontend", runFrontend ? "true" : "false");
             core.setOutput("run_amber", runAmber ? "true" : "false");
