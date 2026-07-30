@@ -102,6 +102,11 @@ class ExecutorManager:
         # gen_module_file_name guarantees module_name is unique across
         # the process, so import_module will always cleanly load source
         # from the tmp fs we just wrote — no re-import / reload dance.
+        # invalidate_caches is required: FileFinder caches the directory
+        # listing keyed on its mtime, so a second module written within
+        # the filesystem's timestamp granularity is otherwise invisible
+        # and import_module raises ModuleNotFoundError.
+        importlib.invalidate_caches()
         executor_module = importlib.import_module(module_name)
         self.operator_module_name = module_name
 
