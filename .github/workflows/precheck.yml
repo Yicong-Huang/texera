@@ -110,6 +110,11 @@ jobs:
       - name: Decide which jobs to run
         id: decide
         uses: actions/github-script@v9
+        env:
+          # Fine-grained PAT with administration:read on this repo; used
+          # only to probe self-hosted runner availability. Optional — when
+          # absent the ci:self-hosted label is trusted without probing.
+          ARC_STATUS_TOKEN: ${{ secrets.ARC_STATUS_TOKEN }}
         with:
           script: |
             const eventName = context.eventName;
@@ -323,13 +328,52 @@ jobs:
               runPyrightLanguageService = false;
             }
 
-            // Runner tiers: the ci:self-hosted PR label forces Linux build
-            // jobs onto the self-hosted scale sets (arc-heavy-linux for the sbt/JVM
-            // stacks, arc-light-linux for the rest); the default (including push /
-            // dispatch events) is GitHub-hosted.
+            // Runner tiers: the ci:self-hosted PR label opts Linux build
+            // jobs into the self-hosted scale sets (arc-heavy-linux for the
+            // sbt/JVM stacks, arc-light-linux for the rest); the default
+            // (including push / dispatch events) is GitHub-hosted.
+            //
+            // Availability fallback: before routing, probe the runner API
+            // for an online runner of each set and fall back to
+            // GitHub-hosted when a set has none (cluster down, scale set
+            // removed), so a labeled PR never queues forever. The probe
+            // relies on each set keeping warm runners (minRunners > 0) —
+            // an idle scale-set with minRunners: 0 registers no runners
+            // and would look unavailable. Probing needs ARC_STATUS_TOKEN
+            // (administration:read); without it the label is trusted as-is.
             const selfHosted = labels.includes("ci:self-hosted");
-            const heavyRunner = selfHosted ? "arc-heavy-linux" : "ubuntu-latest";
-            const cheapRunner = selfHosted ? "arc-light-linux" : "ubuntu-latest";
+            let heavyRunner = selfHosted ? "arc-heavy-linux" : "ubuntu-latest";
+            let cheapRunner = selfHosted ? "arc-light-linux" : "ubuntu-latest";
+            if (selfHosted && process.env.ARC_STATUS_TOKEN) {
+              try {
+                const res = await fetch(
+                  `https://api.github.com/repos/${context.repo.owner}/${context.repo.repo}/actions/runners?per_page=100`,
+                  {
+                    headers: {
+                      authorization: `Bearer ${process.env.ARC_STATUS_TOKEN}`,
+                      accept: "application/vnd.github+json",
+                    },
+                  }
+                );
+                if (!res.ok) throw new Error(`runner list HTTP ${res.status}`);
+                const online = new Set();
+                for (const r of (await res.json()).runners ?? []) {
+                  if (r.status === "online") for (const l of r.labels) online.add(l.name);
+                }
+                if (!online.has("arc-heavy-linux")) {
+                  heavyRunner = "ubuntu-latest";
+                  core.warning("arc-heavy-linux has no online runner; falling back to ubuntu-latest.");
+                }
+                if (!online.has("arc-light-linux")) {
+                  cheapRunner = "ubuntu-latest";
+                  core.warning("arc-light-linux has no online runner; falling back to ubuntu-latest.");
+                }
+              } catch (e) {
+                core.warning(`Runner availability probe failed (${e.message}); trusting the label.`);
+              }
+            } else if (selfHosted) {
+              core.info("ARC_STATUS_TOKEN not set; trusting the ci:self-hosted label without probing.");
+            }
             core.setOutput("heavy_runner", heavyRunner);
             core.setOutput("cheap_runner", cheapRunner);
             core.info(`Linux runners: heavy=${heavyRunner} cheap=${cheapRunner}`);

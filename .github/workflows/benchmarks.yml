@@ -133,6 +133,10 @@ jobs:
       - name: Decide whether to run bench
         id: decide
         uses: actions/github-script@v9
+        env:
+          # Optional PAT (administration:read) for the runner availability
+          # probe; see precheck.yml.
+          ARC_STATUS_TOKEN: ${{ secrets.ARC_STATUS_TOKEN }}
         with:
           script: |
             const eventName = context.eventName;
@@ -170,8 +174,33 @@ jobs:
                 : "No trigger label present; skipping bench."
             );
             core.setOutput("run_bench", shouldRun ? "true" : "false");
-            // ci:self-hosted routes the bench onto the dedicated arc-bench-linux runner.
-            const linuxRunner = labels.includes("ci:self-hosted") ? "arc-bench-linux" : "ubuntu-latest";
+            // ci:self-hosted routes the bench onto the dedicated
+            // arc-bench-linux runner, with a fallback to GitHub-hosted when
+            // the set has no online runner (same probe as precheck.yml).
+            let linuxRunner = labels.includes("ci:self-hosted") ? "arc-bench-linux" : "ubuntu-latest";
+            if (linuxRunner === "arc-bench-linux" && process.env.ARC_STATUS_TOKEN) {
+              try {
+                const res = await fetch(
+                  `https://api.github.com/repos/${context.repo.owner}/${context.repo.repo}/actions/runners?per_page=100`,
+                  {
+                    headers: {
+                      authorization: `Bearer ${process.env.ARC_STATUS_TOKEN}`,
+                      accept: "application/vnd.github+json",
+                    },
+                  }
+                );
+                if (!res.ok) throw new Error(`runner list HTTP ${res.status}`);
+                const online = (await res.json()).runners?.some(
+                  (r) => r.status === "online" && r.labels.some((l) => l.name === "arc-bench-linux")
+                );
+                if (!online) {
+                  linuxRunner = "ubuntu-latest";
+                  core.warning("arc-bench-linux has no online runner; falling back to ubuntu-latest.");
+                }
+              } catch (e) {
+                core.warning(`Runner availability probe failed (${e.message}); trusting the label.`);
+              }
+            }
             core.setOutput("linux_runner", linuxRunner);
             core.info(`Linux runner: ${linuxRunner}`);
 
