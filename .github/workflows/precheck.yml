@@ -61,6 +61,8 @@ on:
         value: ${{ jobs.decide.outputs.light_runner }}
 
 permissions:
+  # actions: read backs the queued-job backlog probe for runner routing.
+  actions: read
   checks: read
   # contents: read backs the git-data commit lookups (tree SHAs) in the
   # merge-queue fast path.
@@ -338,19 +340,46 @@ jobs:
             // The default (including push / dispatch events) is
             // GitHub-hosted.
             //
-            // Availability fallback: before routing, probe the runner API
-            // for an online runner of each set and fall back to
-            // GitHub-hosted when a set has none (cluster down, scale set
-            // removed), so a labeled PR never queues forever. The probe
-            // relies on each set keeping warm runners (minRunners > 0) —
-            // an idle scale-set with minRunners: 0 registers no runners
-            // and would look unavailable. Probing needs ARC_STATUS_TOKEN
-            // (administration:read); without it the label is trusted as-is.
+            // Fallback probing, two levels, evaluated per tier:
+            //
+            //  Level 1 (availability): a set with no online runner (cluster
+            //  down, scale set removed) falls back to GitHub-hosted so a
+            //  labeled PR never queues forever. Relies on each set keeping
+            //  warm runners (minRunners > 0) — an idle scale-set with
+            //  minRunners: 0 registers no runners and would look
+            //  unavailable.
+            //
+            //  Level 2 (congestion): predict queueing before it happens by
+            //  comparing this round's demand (the stack decisions above
+            //  tell us how many jobs each tier is about to receive)
+            //  against idle supply (runner busy flags) plus the backlog
+            //  of already-queued jobs waiting for the same label. Blind
+            //  spot: k8s-side capacity (Pending pods, scale-up headroom)
+            //  is invisible to the GitHub API.
+            //
+            // Runner listing needs ARC_STATUS_TOKEN (administration:read);
+            // without it the label is trusted as-is. Any probe error
+            // degrades to trusting the label.
             const selfHosted = labels.includes("ci:self-hosted");
             const tiers = {
               heavy_runner: selfHosted ? "arc-heavy-linux" : "ubuntu-latest",
               medium_runner: selfHosted ? "arc-medium-linux" : "ubuntu-latest",
               light_runner: selfHosted ? "arc-light-linux" : "ubuntu-latest",
+            };
+            // Per-tier job counts this round. PLATFORM_SERVICES mirrors the
+            // service matrix size in build.yml — keep in sync.
+            const PLATFORM_SERVICES = 6;
+            const demand = {
+              "arc-heavy-linux": (runAmber ? 1 : 0) + (runAmberIntegration ? 1 : 0),
+              "arc-medium-linux":
+                (runPlatform ? PLATFORM_SERVICES : 0) +
+                (runPlatformIntegration ? PLATFORM_SERVICES : 0) +
+                (runFrontend ? 1 : 0),
+              "arc-light-linux":
+                (runPyamber ? 3 : 0) +
+                (runInfra ? 1 : 0) +
+                (runAgentService ? 1 : 0) +
+                (runPyrightLanguageService ? 1 : 0),
             };
             if (selfHosted && process.env.ARC_STATUS_TOKEN) {
               try {
@@ -364,14 +393,59 @@ jobs:
                   }
                 );
                 if (!res.ok) throw new Error(`runner list HTTP ${res.status}`);
-                const online = new Set();
+                const online = {};
+                const idle = {};
                 for (const r of (await res.json()).runners ?? []) {
-                  if (r.status === "online") for (const l of r.labels) online.add(l.name);
+                  if (r.status !== "online") continue;
+                  for (const l of r.labels) {
+                    online[l.name] = (online[l.name] ?? 0) + 1;
+                    if (!r.busy) idle[l.name] = (idle[l.name] ?? 0) + 1;
+                  }
+                }
+                // Backlog: queued jobs per label across currently queued
+                // runs (capped sample; uses the workflow GITHUB_TOKEN).
+                const backlog = {};
+                try {
+                  const { data: queued } = await github.rest.actions.listWorkflowRunsForRepo({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    status: "queued",
+                    per_page: 10,
+                  });
+                  for (const run of queued.workflow_runs ?? []) {
+                    const { data: jobsData } = await github.rest.actions.listJobsForWorkflowRun({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      run_id: run.id,
+                      per_page: 100,
+                    });
+                    for (const job of jobsData.jobs ?? []) {
+                      if (job.status !== "queued") continue;
+                      for (const l of job.labels) backlog[l] = (backlog[l] ?? 0) + 1;
+                    }
+                  }
+                } catch (e) {
+                  core.warning(`Backlog probe failed (${e.message}); assuming no backlog.`);
                 }
                 for (const [output, scaleSet] of Object.entries({ ...tiers })) {
-                  if (scaleSet !== "ubuntu-latest" && !online.has(scaleSet)) {
+                  if (scaleSet === "ubuntu-latest") continue;
+                  const nOnline = online[scaleSet] ?? 0;
+                  const nIdle = idle[scaleSet] ?? 0;
+                  const nBacklog = backlog[scaleSet] ?? 0;
+                  const nDemand = demand[scaleSet] ?? 0;
+                  let reason = null;
+                  if (nOnline === 0) {
+                    reason = "no online runner";
+                  } else if (nIdle === 0 && nBacklog >= 2) {
+                    reason = `all ${nOnline} runners busy with ${nBacklog} jobs already queued`;
+                  } else if (nDemand > nIdle + 2) {
+                    reason = `demand ${nDemand} exceeds idle ${nIdle} + slack`;
+                  }
+                  if (reason) {
                     tiers[output] = "ubuntu-latest";
-                    core.warning(`${scaleSet} has no online runner; falling back to ubuntu-latest.`);
+                    core.warning(`${scaleSet}: ${reason}; falling back to ubuntu-latest.`);
+                  } else {
+                    core.info(`${scaleSet}: online=${nOnline} idle=${nIdle} backlog=${nBacklog} demand=${nDemand} — ok`);
                   }
                 }
               } catch (e) {
