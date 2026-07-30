@@ -19,7 +19,7 @@
 githubConfigUrl: "https://github.com/Yicong-Huang/Texera"
 githubConfigSecret: github-arc-secret
 runnerScaleSetName: "arc-light-linux"
-minRunners: 0
+minRunners: 5
 maxRunners: 10
 
 # service containers (postgres) and docker builds need a Docker daemon
