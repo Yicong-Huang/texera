@@ -38,9 +38,11 @@ RUN echo "runner ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/runner \
     && chmod 0440 /etc/sudoers.d/runner
 
 # Go — required by apache/skywalking-eyes (`make install` runs go install).
+# GOPATH bin and ~/.local/bin are on PATH like on GitHub-hosted runners
+# (skywalking-eyes invokes license-eye from ~/go/bin after go install).
 ARG GO_VERSION=1.24.5
 RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xz
-ENV PATH="/usr/local/go/bin:${PATH}"
+ENV PATH="/usr/local/go/bin:/home/runner/go/bin:/home/runner/.local/bin:${PATH}"
 
 # Google Chrome — frontend karma ChromeHeadless tests.
 RUN curl -fsSL https://dl.google.com/linux/linux_signing_key.pub \
