@@ -63,4 +63,8 @@ RUN curl -fsSL https://dl.google.com/linux/linux_signing_key.pub \
     && rm -rf /var/lib/apt/lists/*
 ENV CHROME_BIN=/usr/bin/google-chrome
 
+# GitHub-hosted images keep /usr/local user-writable; tools like
+# skywalking-eyes `cp` binaries straight into /usr/local/bin without sudo.
+RUN chown -R runner:runner /usr/local/bin /usr/local/include /usr/local/lib /usr/local/share
+
 USER runner
