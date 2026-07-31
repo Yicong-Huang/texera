@@ -72,12 +72,12 @@ permissions:
 jobs:
   decide:
     name: Precheck
-    # Control-plane resilience: with the ci:self-hosted label this job
-    # runs on arc-light-linux so a jammed GitHub-hosted pool cannot stall
-    # the pipeline. Availability cannot be probed before this job runs, so
+    # Control-plane resilience: merge-queue entries (and labeled PRs) run
+    # this job on arc-light-linux so a jammed GitHub-hosted pool cannot
+    # stall the pipeline. Availability cannot be probed before this job runs, so
     # the repo variable ARC_AVAILABLE is the kill switch: set it to
     # 'false' when the cluster is down to route back to ubuntu-slim.
-    runs-on: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:self-hosted') && vars.ARC_AVAILABLE != 'false') && 'arc-light-linux' || 'ubuntu-slim' }}
+    runs-on: ${{ ((github.event_name == 'merge_group' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:self-hosted'))) && vars.ARC_AVAILABLE != 'false') && 'arc-light-linux' || 'ubuntu-slim' }}
     outputs:
       run_frontend: ${{ steps.decide.outputs.run_frontend }}
       run_amber: ${{ steps.decide.outputs.run_amber }}
@@ -338,12 +338,14 @@ jobs:
               runPyrightLanguageService = false;
             }
 
-            // Runner tiers: the ci:self-hosted PR label opts Linux build
-            // jobs into the self-hosted scale sets — arc-heavy-linux for
-            // the amber/sbt stacks, arc-medium-linux for platform and
-            // frontend, arc-light-linux for the small python/service jobs.
-            // The default (including push / dispatch events) is
-            // GitHub-hosted.
+            // Runner tiers: merge queue entries default to the
+            // self-hosted scale sets (the queue is the latency-critical
+            // serialized path most hurt by hosted-pool congestion);
+            // PR events opt in via the ci:self-hosted label. Everything
+            // else (push / dispatch) stays GitHub-hosted. Tiers:
+            // arc-heavy-linux for the amber/sbt stacks, arc-medium-linux
+            // for platform and pyamber, arc-light-linux for the small
+            // service jobs.
             //
             // Fallback probing, two levels, evaluated per tier:
             //
@@ -365,7 +367,7 @@ jobs:
             // Runner listing needs ARC_STATUS_TOKEN (administration:read);
             // without it the label is trusted as-is. Any probe error
             // degrades to trusting the label.
-            const selfHosted = labels.includes("ci:self-hosted");
+            const selfHosted = eventName === "merge_group" || labels.includes("ci:self-hosted");
             const tiers = {
               heavy_runner: selfHosted ? "arc-heavy-linux" : "ubuntu-latest",
               medium_runner: selfHosted ? "arc-medium-linux" : "ubuntu-latest",
