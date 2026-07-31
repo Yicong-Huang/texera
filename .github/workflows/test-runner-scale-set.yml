@@ -4,15 +4,20 @@ on:
     branches: [test-runner-scale-set]
   workflow_dispatch:
 
+permissions:
+  actions: write
+
 jobs:
-  smoke:
-    runs-on: arc-linux
-    timeout-minutes: 10
+  var-write-test:
+    runs-on: ubuntu-latest
     steps:
-      - name: Runner info
+      - name: Write repo variable with GITHUB_TOKEN
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "PATH=$PATH"
-          which go || echo "no go"
-          ls /home/runner/go/bin 2>/dev/null || echo "no ~/go/bin"
-          which license-eye || echo "no license-eye"
-          which make psql google-chrome sudo || true
+          if gh api repos/${{ github.repository }}/actions/variables/HEARTBEAT_TEST --jq .value 2>/dev/null; then
+            gh api -X PATCH repos/${{ github.repository }}/actions/variables/HEARTBEAT_TEST -f name=HEARTBEAT_TEST -f value="patched-$(date +%s)" && echo "PATCH OK"
+          else
+            gh api -X POST repos/${{ github.repository }}/actions/variables -f name=HEARTBEAT_TEST -f value="created-$(date +%s)" && echo "POST OK"
+          fi
+          gh api repos/${{ github.repository }}/actions/variables/HEARTBEAT_TEST --jq '.value'
