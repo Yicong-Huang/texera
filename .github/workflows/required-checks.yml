@@ -78,7 +78,9 @@ jobs:
     name: Required Checks
     needs: [precheck, build]
     if: always()
-    runs-on: ubuntu-slim
+    # Control-plane resilience: follow precheck's probed routing (label
+    # present AND the scale set has online runners); ubuntu-slim otherwise.
+    runs-on: ${{ needs.precheck.outputs.light_runner == 'arc-light-linux' && 'arc-light-linux' || 'ubuntu-slim' }}
     steps:
       - name: Verify all required checks succeeded or were skipped
         run: |

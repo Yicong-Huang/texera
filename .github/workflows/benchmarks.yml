@@ -103,7 +103,12 @@ jobs:
     # run). Lifted from required-checks.yml's precheck so the trigger
     # surface matches amber-integration exactly.
     name: Precheck
-    runs-on: ubuntu-slim
+    # Control-plane resilience: with the ci:self-hosted label this job
+    # runs on arc-light-linux so a jammed GitHub-hosted pool cannot stall
+    # the pipeline. Availability cannot be probed before this job runs, so
+    # the repo variable ARC_AVAILABLE is the kill switch: set it to
+    # 'false' when the cluster is down to route back to ubuntu-slim.
+    runs-on: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:self-hosted') && vars.ARC_AVAILABLE != 'false') && 'arc-light-linux' || 'ubuntu-slim' }}
     outputs:
       run_bench: ${{ steps.decide.outputs.run_bench }}
       linux_runner: ${{ steps.decide.outputs.linux_runner }}

@@ -65,7 +65,9 @@ jobs:
   apply-check:
     needs: precheck
     if: ${{ needs.precheck.outputs.backport_targets != '[]' }}
-    runs-on: ubuntu-slim
+    # Control-plane resilience: follow precheck's probed routing (label
+    # present AND the scale set has online runners); ubuntu-slim otherwise.
+    runs-on: ${{ needs.precheck.outputs.light_runner == 'arc-light-linux' && 'arc-light-linux' || 'ubuntu-slim' }}
     outputs:
       buildable: ${{ steps.check.outputs.buildable }}
     steps:
