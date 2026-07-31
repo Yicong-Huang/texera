@@ -38,12 +38,13 @@ on:
         default: ""
       # Runner labels for Linux jobs, three tiers (precheck decides via the
       # ci:self-hosted PR label; GitHub-hosted ubuntu-latest otherwise).
-      # heavy: amber / amber-integration (8C/16G class).
+      # heavy: amber / amber-integration / frontend (8C/16G class; the
+      # Angular prod build OOMs under the medium tier's 8Gi limit).
       heavy_runner:
         required: false
         type: string
         default: "ubuntu-latest"
-      # medium: platform / platform-integration / frontend (4C/8G class).
+      # medium: platform / platform-integration (4C/8G class).
       medium_runner:
         required: false
         type: string
@@ -105,11 +106,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["${{ inputs.medium_runner }}", windows-latest, macos-latest]
+        os: ["${{ inputs.heavy_runner }}", windows-latest, macos-latest]
         include:
           - os: macos-latest
             arch: arm64
-          - os: "${{ inputs.medium_runner }}"
+          - os: "${{ inputs.heavy_runner }}"
             arch: x64
           - os: windows-latest
             arch: x64

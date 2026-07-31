@@ -370,11 +370,11 @@ jobs:
             // service matrix size in build.yml — keep in sync.
             const PLATFORM_SERVICES = 6;
             const demand = {
-              "arc-heavy-linux": (runAmber ? 1 : 0) + (runAmberIntegration ? 1 : 0),
+              "arc-heavy-linux":
+                (runAmber ? 1 : 0) + (runAmberIntegration ? 1 : 0) + (runFrontend ? 1 : 0),
               "arc-medium-linux":
                 (runPlatform ? PLATFORM_SERVICES : 0) +
-                (runPlatformIntegration ? PLATFORM_SERVICES : 0) +
-                (runFrontend ? 1 : 0),
+                (runPlatformIntegration ? PLATFORM_SERVICES : 0),
               "arc-light-linux":
                 (runPyamber ? 3 : 0) +
                 (runInfra ? 1 : 0) +
