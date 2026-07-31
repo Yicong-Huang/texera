@@ -16,13 +16,13 @@
 # under the License.
 
 # Medium tier: platform / platform-integration / frontend (4C/8G class).
-# Target fleet: 10-20 runners once more nodes join; a single 72C/125G
-# node caps out around 7 alongside the other tiers.
+# Fleet: 12 on the 96C/256G node (target 10-20 with more nodes);
+# grow maxRunners as nodes join.
 githubConfigUrl: "https://github.com/Yicong-Huang/Texera"
 githubConfigSecret: github-arc-secret
 runnerScaleSetName: "arc-medium-linux"
-minRunners: 4
-maxRunners: 7
+minRunners: 6
+maxRunners: 12
 
 # service containers (postgres) and docker builds need a Docker daemon
 containerMode:
@@ -41,7 +41,7 @@ template:
         resources:
           requests:
             cpu: "2"
-            memory: "6Gi"
+            memory: "5Gi"
             ephemeral-storage: "10Gi"
           limits:
             cpu: "4"

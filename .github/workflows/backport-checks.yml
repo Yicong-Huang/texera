@@ -41,6 +41,9 @@ on:
       - unlabeled
 
 permissions:
+  # actions: read is required by the called precheck.yml (backlog probe);
+  # a reusable workflow's permissions must be a subset of its caller's.
+  actions: read
   checks: write
   contents: read
   pull-requests: read

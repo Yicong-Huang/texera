@@ -16,12 +16,12 @@
 # under the License.
 
 # Heavy tier: amber / amber-integration (8C/16G class).
-# Target fleet: 10 runners once more nodes join; single node caps at 3.
+# Fleet: 10 on the 96C/256G node.
 githubConfigUrl: "https://github.com/Yicong-Huang/Texera"
 githubConfigSecret: github-arc-secret
 runnerScaleSetName: "arc-heavy-linux"
-minRunners: 2
-maxRunners: 3
+minRunners: 5
+maxRunners: 10
 
 # service containers (postgres) and docker builds need a Docker daemon
 containerMode:

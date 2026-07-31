@@ -16,7 +16,7 @@
 # under the License.
 
 # Bench tier: dedicated runners so benchmark numbers stay comparable (16C/16G).
-# Target fleet: 1-2; single node runs 1.
+# Fleet: 1 on the 96C/256G node; bump to 2 with a second node.
 githubConfigUrl: "https://github.com/Yicong-Huang/Texera"
 githubConfigSecret: github-arc-secret
 runnerScaleSetName: "arc-bench-linux"
