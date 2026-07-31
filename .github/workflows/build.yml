@@ -44,12 +44,12 @@ on:
         required: false
         type: string
         default: "ubuntu-latest"
-      # medium: platform / platform-integration (4C/8G class).
+      # medium: platform / platform-integration / pyamber (4C/8G class).
       medium_runner:
         required: false
         type: string
         default: "ubuntu-latest"
-      # light: pyamber / infra / agent-service / pyright (2C/4G class).
+      # light: infra / agent-service / pyright (2C/4G class).
       light_runner:
         required: false
         type: string
@@ -1005,7 +1005,7 @@ jobs:
     if: ${{ inputs.run_pyamber }}
     strategy:
       matrix:
-        os: ["${{ inputs.light_runner }}"]
+        os: ["${{ inputs.medium_runner }}"]
         python-version: ["3.11", "3.12", "3.13"]
     runs-on: ${{ matrix.os }}
     services:

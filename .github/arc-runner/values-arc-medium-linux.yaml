@@ -15,14 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Medium tier: platform / platform-integration / frontend (4C/8G class).
-# Fleet: 12 on the 96C/256G node (target 10-20 with more nodes);
-# grow maxRunners as nodes join.
+# Medium tier: platform / platform-integration / pyamber (4C/8G class,
+# requests == limits for guaranteed QoS). Fleet: 8 warm / 15 max —
+# a full round needs 15 (12 platform + 3 pyamber).
 githubConfigUrl: "https://github.com/Yicong-Huang/Texera"
 githubConfigSecret: github-arc-secret
 runnerScaleSetName: "arc-medium-linux"
-minRunners: 6
-maxRunners: 12
+minRunners: 8
+maxRunners: 15
 
 # service containers (postgres) and docker builds need a Docker daemon
 containerMode:
@@ -40,9 +40,9 @@ template:
           - /home/runner/run.sh
         resources:
           requests:
-            cpu: "2"
-            memory: "5Gi"
-            ephemeral-storage: "10Gi"
+            cpu: "4"
+            memory: "8Gi"
+            ephemeral-storage: "16Gi"
           limits:
             cpu: "4"
             memory: "8Gi"

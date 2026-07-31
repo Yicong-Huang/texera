@@ -15,13 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Heavy tier: amber / amber-integration (8C/16G class).
-# Fleet: 10 on the 96C/256G node.
+# Heavy tier: amber / amber-integration / frontend (8C/16G class,
+# requests == limits for guaranteed QoS). Fleet: 3 warm / 6 max.
 githubConfigUrl: "https://github.com/Yicong-Huang/Texera"
 githubConfigSecret: github-arc-secret
 runnerScaleSetName: "arc-heavy-linux"
-minRunners: 5
-maxRunners: 10
+minRunners: 3
+maxRunners: 6
 
 # service containers (postgres) and docker builds need a Docker daemon
 containerMode:
@@ -39,9 +39,9 @@ template:
           - /home/runner/run.sh
         resources:
           requests:
-            cpu: "4"
-            memory: "12Gi"
-            ephemeral-storage: "15Gi"
+            cpu: "8"
+            memory: "16Gi"
+            ephemeral-storage: "25Gi"
           limits:
             cpu: "8"
             memory: "16Gi"

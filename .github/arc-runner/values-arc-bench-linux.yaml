@@ -39,9 +39,9 @@ template:
           - /home/runner/run.sh
         resources:
           requests:
-            cpu: "4"
-            memory: "12Gi"
-            ephemeral-storage: "15Gi"
+            cpu: "16"
+            memory: "16Gi"
+            ephemeral-storage: "25Gi"
           limits:
             cpu: "16"
             memory: "16Gi"
